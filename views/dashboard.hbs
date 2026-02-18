@@ -1,0 +1,54 @@
+<div class="container">
+    <h2>Tablero de Proyecto</h2>
+
+    <form action="/nueva-tarjeta" method="POST" class="task-form-inline">
+        <input type="text" name="tituloTarea" placeholder="¿Qué hay que hacer?" required>
+        <button type="submit" class="btn-add">Añadir</button>
+    </form>
+
+    <div class="kanban-board">
+        <div class="column">
+            <h3>Pendiente</h3>
+            {{#each tareas}}
+                {{#if (eq this.estado "Pendiente")}}
+                <div class="card">
+                    <p>{{this.titulo}}</p>
+                    <form action="/mover-tarea" method="POST">
+                        <input type="hidden" name="titulo" value="{{this.titulo}}">
+                        <input type="hidden" name="nuevoEstado" value="En Progreso">
+                        <button type="submit" class="btn-move">Empezar →</button>
+                    </form>
+                </div>
+                {{/if}}
+            {{/each}}
+        </div>
+
+        <div class="column">
+            <h3>En Progreso</h3>
+            {{#each tareas}}
+                {{#if (eq this.estado "En Progreso")}}
+                <div class="card" style="border-left-color: #f39c12;">
+                    <p>{{this.titulo}}</p>
+                    <form action="/mover-tarea" method="POST">
+                        <input type="hidden" name="titulo" value="{{this.titulo}}">
+                        <input type="hidden" name="nuevoEstado" value="Finalizado">
+                        <button type="submit" class="btn-move" style="background-color: #f39c12;">Finalizar ✔</button>
+                    </form>
+                </div>
+                {{/if}}
+            {{/each}}
+        </div>
+
+        <div class="column">
+            <h3>Finalizado</h3>
+            {{#each tareas}}
+                {{#if (eq this.estado "Finalizado")}}
+                <div class="card" style="border-left-color: #27ae60; opacity: 0.8;">
+                    <p style="text-decoration: line-through; color: #7f8c8d;">{{this.titulo}}</p>
+                    <span style="color: #27ae60; font-size: 0.8rem; font-weight: bold;">Completado</span>
+                </div>
+                {{/if}}
+            {{/each}}
+        </div>
+    </div>
+</div>

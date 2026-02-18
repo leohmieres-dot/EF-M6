@@ -1,0 +1,33 @@
+{
+  "usuario": "Equipo Pro",
+  "tareas": [
+    {
+      "titulo": "Configurar entorno de Node",
+      "estado": "Completado"
+    },
+    {
+      "titulo": "Crear vistas HBS",
+      "estado": "Finalizado"
+    },
+    {
+      "titulo": "aasdaaasd",
+      "estado": "Finalizado"
+    },
+    {
+      "titulo": "nueva tarea",
+      "estado": "Finalizado"
+    },
+    {
+      "titulo": "tareas",
+      "estado": "Finalizado"
+    },
+    {
+      "titulo": "tareas2",
+      "estado": "Finalizado"
+    },
+    {
+      "titulo": "tareas",
+      "estado": "Finalizado"
+    }
+  ]
+}

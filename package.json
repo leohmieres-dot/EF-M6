@@ -1,0 +1,14 @@
+{
+  "name": "kanbanpro",
+  "version": "1.0.0",
+  "description": "Sprint 1 de KanbanPro",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "hbs": "^4.2.0"
+  }
+}

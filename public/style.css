@@ -1,0 +1,255 @@
+:root {
+    --bg: #f4f7f6;
+    --primary: #4a90e2;
+    --primary-dark: #357abd;
+    --success: #28a745;
+    --warning: #f39c12;
+    --dark: #2c3e50;
+    --white: #ffffff;
+    --gray-light: #ebedef;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    background-color: var(--bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 90%;
+}
+
+nav {
+    background: var(--dark);
+    padding: 1rem 0;
+    color: white;
+}
+
+nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a { color: white; text-decoration: none; margin-left: 15px; font-size: 0.9rem; }
+
+main { flex: 1; padding: 40px 0; }
+
+.task-form-inline {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    max-width: 600px; 
+}
+
+.task-form-inline input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.btn-add {
+    background-color: var(--success);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-add:hover { background-color: #218838; }
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.column {
+    background: var(--gray-light);
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 500px;
+}
+
+.column h3 {
+    text-align: center;
+    color: var(--dark);
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.card {
+    background: var(--white);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--primary);
+}
+
+.card p {
+    margin: 0 0 12px 0;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.btn-move {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.btn-move:hover { background-color: var(--primary-dark); }
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 50px;
+    min-height: 70vh;
+}
+
+.auth-column {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e1e4e8;
+}
+
+.auth-column h2 {
+    margin-top: 0;
+    color: var(--dark);
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.auth-column input {
+    display: block;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+/* FOOTER */
+footer {
+    background: var(--dark);
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.8rem;
+    margin-top: auto;
+
+    .hero {
+    background-image: url('/images/hero-bg.webp'); /* Ruta a tu imagen de fondo */
+    background-size: cover;
+    background-position: center;
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+    position: relative;
+    /* Para el efecto de superposición oscura */
+    z-index: 1;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Superposición oscura */
+    z-index: -1;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.hero p {
+    font-size: 1.5rem;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-hero {
+    display: inline-block;
+    background-color: var(--primary); /* Usamos tu color primario */
+    color: white;
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.btn-hero:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Feature Section */
+.features-section {
+    padding: 60px 0;
+    text-align: center;
+}
+
+.features-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+    color: var(--dark);
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e1e4e8;
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: #555;
+    line-height: 1.7;
+}
+}
