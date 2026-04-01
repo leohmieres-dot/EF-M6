@@ -1,74 +1,139 @@
 const express = require('express');
 const hbs = require('hbs');
-const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const cookieParser = require('cookie-parser');
+
+const sequelize = require('./db'); 
+const { User, Board, List, Card } = require('./models'); 
+const verificarToken = require('./middlewares/auth');
 
 const app = express();
+const SECRET_KEY = process.env.JWT_SECRET || 'JWT_SECRET';
 
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'hbs');
 app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
 
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// HELPER CRÍTICO: Para comparar el nombre de la lista y mostrar botones
 hbs.registerHelper('eq', function (a, b) {
     return a === b;
 });
 
+// --- RUTAS PÚBLICAS ---
 app.get('/', (req, res) => res.render('home'));
 app.get('/login', (req, res) => res.render('login'));
 app.get('/register', (req, res) => res.render('register'));
 
-app.get('/dashboard', (req, res) => {
-    try {
-        const rawData = fs.readFileSync('./data.json', 'utf-8');
-        const data = JSON.parse(rawData);
-        res.render('dashboard', data);
-    } catch (error) {
-        res.send("Error: Asegúrate de que data.json exista.");
-    }
-});
-
-
-app.post('/nueva-tarjeta', (req, res) => {
-    const data = JSON.parse(fs.readFileSync('./data.json', 'utf-8'));
-    data.tareas.push({ titulo: req.body.tituloTarea, estado: "Pendiente" });
-    fs.writeFileSync('./data.json', JSON.stringify(data, null, 2));
-    res.redirect('/dashboard');
-});
-
-app.post('/mover-tarea', (req, res) => {
-    const { titulo, nuevoEstado } = req.body;
-    const data = JSON.parse(fs.readFileSync('./data.json', 'utf-8'));
-
-    const tarea = data.tareas.find(t => t.titulo === titulo);
-    if (tarea) {
-        tarea.estado = nuevoEstado;
-    }
-
-    fs.writeFileSync('./data.json', JSON.stringify(data, null, 2));
-    res.redirect('/dashboard');
-});
-
-app.post('/register', (req, res) => {
+// --- AUTH ---
+app.post('/api/auth/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        const usuarios = JSON.parse(fs.readFileSync('./usuarios.json', 'utf-8'));
-        usuarios.push({ username, email, password });
-        fs.writeFileSync('./usuarios.json', JSON.stringify(usuarios, null, 2));
+        await User.create({ username, email, password });
         res.redirect('/login');
-    } catch (e) { res.send("Error al registrar."); }
+    } catch (error) {
+        res.status(400).send("Error: " + error.message);
+    }
 });
 
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    const usuarios = JSON.parse(fs.readFileSync('./usuarios.json', 'utf-8'));
-    const encontrado = usuarios.find(u => u.username === username && u.password === password);
-    
-    if (encontrado) res.redirect('/dashboard');
-    else res.send("<h1>Error: Datos incorrectos</h1><a href='/login'>Volver</a>");
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ where: { email } });
+        if (user && await bcrypt.compare(password, user.password)) {
+            const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, maxAge: 3600000 });
+            return res.redirect('/dashboard');
+        }
+        res.status(401).send("Credenciales inválidas.");
+    } catch (error) {
+        res.status(500).send("Error en el servidor");
+    }
+});
+
+// --- DASHBOARD ---
+app.get('/dashboard', verificarToken, async (req, res) => {
+    try {
+        const tableros = await Board.findAll({
+            where: { userId: req.user.id }, 
+            include: [{ 
+                model: List, 
+                include: [{ model: Card }] 
+            }],
+            order: [['id', 'ASC'], [List, 'id', 'ASC']]
+        });
+        const tablerosData = tableros.map(t => t.get({ plain: true }));
+        res.render('dashboard', { tableros: tablerosData, usuario: req.user });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error en dashboard.");
+    }
+});
+
+// --- LÓGICA KANBAN ---
+app.post('/api/tableros', verificarToken, async (req, res) => {
+    try {
+        const nuevoTablero = await Board.create({ title: req.body.title, userId: req.user.id });
+        // Nombres exactos: 'Pendiente', 'En Progreso', 'Finalizado'
+       await List.bulkCreate([
+    { name: 'Pendiente', boardId: nuevoTablero.id },
+    { name: 'En Progreso', boardId: nuevoTablero.id },
+    { name: 'Finalizado', boardId: nuevoTablero.id }
+        ]);
+        res.redirect('/dashboard');
+    } catch (error) {
+        res.status(500).send("Error al crear tablero.");
+    }
+});
+
+app.post('/nueva-tarjeta', verificarToken, async (req, res) => {
+    await Card.create({ titulo: req.body.tituloTarea, listId: req.body.listaId });
+    res.redirect('/dashboard');
+});
+
+app.post('/eliminar-tarea', verificarToken, async (req, res) => {
+    await Card.destroy({ where: { id: req.body.cardId } });
+    res.redirect('/dashboard');
+});
+
+app.post('/eliminar-tablero', verificarToken, async (req, res) => {
+    await Board.destroy({ where: { id: req.body.boardId, userId: req.user.id } });
+    res.redirect('/dashboard');
+});
+
+// RUTA DE MOVIMIENTO CORREGIDA
+app.post('/mover-tarea', verificarToken, async (req, res) => {
+    try {
+        const { cardId, nuevoEstado } = req.body;
+        const tarjeta = await Card.findByPk(cardId, { include: List });
+
+        if (tarjeta && tarjeta.List) {
+            const listaDestino = await List.findOne({ 
+                where: { name: nuevoEstado, boardId: tarjeta.List.boardId } 
+            });
+
+            if (listaDestino) {
+                await tarjeta.update({ listId: listaDestino.id });
+            }
+        }
+        res.redirect('/dashboard');
+    } catch (error) {
+        res.status(500).send("Error al mover.");
+    }
+});
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('token'); 
+    res.redirect('/login');  
 });
 
 const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 KanbanPro corriendo en: http://localhost:${PORT}`);
+sequelize.sync({ force: false }).then(() => { 
+    app.listen(PORT, () => console.log(`🚀 Servidor en http://localhost:${PORT}`));
 });
