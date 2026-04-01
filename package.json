@@ -8,10 +8,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "bg": "^1.0.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.3.1",
     "express": "^4.21.0",
     "hbs": "^4.2.0",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8"
