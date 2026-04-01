@@ -12,10 +12,13 @@ const verificarToken = require('./middlewares/auth');
 const app = express();
 const SECRET_KEY = process.env.JWT_SECRET || 'JWT_SECRET';
 
+// --- CONFIGURACIÓN DE VISTAS Y ESTÁTICOS ---
 app.set('view engine', 'hbs');
+// CAMBIO 1: Usar path.join para que Vercel encuentre la carpeta views siempre
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
-app.use(express.static('public'));
+
+// CAMBIO 2: Usar path.join para la carpeta public (esto arregla tu CSS)
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
@@ -80,11 +83,10 @@ app.get('/dashboard', verificarToken, async (req, res) => {
 app.post('/api/tableros', verificarToken, async (req, res) => {
     try {
         const nuevoTablero = await Board.create({ title: req.body.title, userId: req.user.id });
-        // Nombres exactos: 'Pendiente', 'En Progreso', 'Finalizado'
-       await List.bulkCreate([
-    { name: 'Pendiente', boardId: nuevoTablero.id },
-    { name: 'En Progreso', boardId: nuevoTablero.id },
-    { name: 'Finalizado', boardId: nuevoTablero.id }
+        await List.bulkCreate([
+            { name: 'Pendiente', boardId: nuevoTablero.id },
+            { name: 'En Progreso', boardId: nuevoTablero.id },
+            { name: 'Finalizado', boardId: nuevoTablero.id }
         ]);
         res.redirect('/dashboard');
     } catch (error) {
@@ -93,8 +95,10 @@ app.post('/api/tableros', verificarToken, async (req, res) => {
 });
 
 app.post('/nueva-tarjeta', verificarToken, async (req, res) => {
-    await Card.create({ titulo: req.body.tituloTarea, listId: req.body.listaId });
-    res.redirect('/dashboard');
+    try {
+        await Card.create({ titulo: req.body.tituloTarea, listId: req.body.listaId });
+        res.redirect('/dashboard');
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.post('/eliminar-tarea', verificarToken, async (req, res) => {
@@ -107,7 +111,6 @@ app.post('/eliminar-tablero', verificarToken, async (req, res) => {
     res.redirect('/dashboard');
 });
 
-// RUTA DE MOVIMIENTO CORREGIDA
 app.post('/mover-tarea', verificarToken, async (req, res) => {
     try {
         const { cardId, nuevoEstado } = req.body;
@@ -133,7 +136,15 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');  
 });
 
-const PORT = 3000;
+// CAMBIO 3: Exportar app para Vercel y manejar el puerto dinámicamente
+const PORT = process.env.PORT || 3000;
+
+// Sincronización de DB
 sequelize.sync({ force: false }).then(() => { 
-    app.listen(PORT, () => console.log(`🚀 Servidor en http://localhost:${PORT}`));
+    // Solo levantamos el listener si no estamos en Vercel (opcional pero recomendado)
+    if (process.env.NODE_ENV !== 'production') {
+        app.listen(PORT, () => console.log(`🚀 Servidor en http://localhost:${PORT}`));
+    }
 });
+
+module.exports = app; // VITAL para Vercel
